@@ -10,6 +10,7 @@ module Primes
 
 import Data.Array
 import Data.List (group)
+import Utils (cartProd)
 
 nmax = 28123
 sqrtnmax1 = (floor $ sqrt $ fromIntegral nmax) + 1
@@ -55,6 +56,4 @@ divisors n = foldl cartProd [1] divisorList
 sumDivisors n = (sum $ divisors n) - n
 
 isAbundant n = (sumDivisors n) > n
-
-cartProd l1 l2 = [ x1 * x2 | x1 <- l1, x2 <- l2 ]
 
