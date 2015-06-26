@@ -1,6 +1,8 @@
 module Utils
 ( cartProd
 , factorial
+, digitsToNumber
+, numberToDigits
 )
 where
 
@@ -10,3 +12,13 @@ factorial :: Integer -> Integer
 factorial n
         | n<=1 = 1
         | otherwise = n * (factorial (n-1))
+
+digitsToNumber :: (Num a) => [a] -> a
+digitsToNumber digs = foldl (\x -> \y -> x*10+y) 0 digs
+
+numberToDigits :: (Integral a) => a -> [a]
+numberToDigits = reverse . numberToDigitsBackwards
+        where numberToDigitsBackwards n
+                | n<10 = [n]
+                | otherwise = d : numberToDigitsBackwards (n `div` 10)
+                where d = n `mod` 10

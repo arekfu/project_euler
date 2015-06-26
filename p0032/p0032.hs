@@ -1,4 +1,4 @@
-import Utils (cartProd)
+import Utils (digitsToNumber)
 import Data.List
 import qualified Data.Set as Set
 
@@ -25,11 +25,7 @@ allSplits dig = concat $ [ map (chunks2 n1 n2) perms | n1 <- [n1Min..n1Max], n2 
               n1Max = (length dig) - 2
               perms = generatePermutations dig
 
-chunkToNumbers :: (Num a) => [a] -> a
-chunkToNumbers [] = 0
-chunkToNumbers (x:xs) = (x*10^(length xs)) + chunkToNumbers xs
-
-chunkTripletToNumbers (a,b,c) = (chunkToNumbers a, chunkToNumbers b, chunkToNumbers c)
+chunkTripletToNumbers (a,b,c) = (digitsToNumber a, digitsToNumber b, digitsToNumber c)
 
 allTriplets dig = tuples
         where splits = allSplits dig
