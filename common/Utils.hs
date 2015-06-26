@@ -9,9 +9,7 @@ where
 cartProd l1 l2 = [ x1 * x2 | x1 <- l1, x2 <- l2 ]
 
 factorial :: Integer -> Integer
-factorial n
-        | n<=1 = 1
-        | otherwise = n * (factorial (n-1))
+factorial n = product [1..n]
 
 digitsToNumber :: (Num a) => [a] -> a
 digitsToNumber digs = foldl (\x -> \y -> x*10+y) 0 digs
