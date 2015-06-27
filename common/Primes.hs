@@ -1,6 +1,6 @@
 module Primes
 ( primeTable
-, factorizeNonCached
+, factorize
 , isPrime
 , primeFactors
 , divisors
@@ -12,13 +12,15 @@ import Data.Array
 import Data.List (group)
 import Utils (cartProd)
 
-nmax = 28123
+nmax = 1000000
 sqrtnmax1 = (floor $ sqrt $ fromIntegral nmax) + 1
 
 guessPrimes = 2 : [3, 5 .. sqrtnmax1]
 
-factorize :: Integer -> [Integer]
-factorize n = arr ! n
+factorize = factorizeNonCached
+
+factorizeCached :: Integer -> [Integer]
+factorizeCached n = arr ! n
         where arr = listArray (2,n) [ factorizeHelper i | i <- [2..n] ]
               factorizeHelper i
                       | i<=2 = [i]
@@ -40,14 +42,14 @@ factorizeNonCached n factors
 
 isPrime x
         | x<2 = False
-        | otherwise = (length $ factorizeNonCached x guessPrimes) <= 1
+        | otherwise = (length $ factorize x primeTable) <= 1
 
 primeTable = filter isPrime [2..nmax]
 
 primeFactors n = zip factors powers
         where factors = map head groups
               powers = map length groups
-              groups = (group $ factorizeNonCached n primeTable)
+              groups = (group $ factorize n primeTable)
 
 divisors n = foldl cartProd [1] divisorList
         where divisorList = [ [ i^j | j <- [0..k] ] | (i, k) <- pFactors ]
