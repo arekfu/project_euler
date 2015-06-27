@@ -42,7 +42,7 @@ factorizeNonCached n factors
 
 isPrime x
         | x<2 = False
-        | otherwise = (length $ factorize x primeTable) <= 1
+        | otherwise = (length $ factorize x guessPrimes) <= 1
 
 primeTable = filter isPrime [2..nmax]
 
