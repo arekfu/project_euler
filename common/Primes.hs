@@ -1,5 +1,6 @@
 module Primes
 ( primeTable
+, primeSet
 , factorize
 , isPrime
 , primeFactors
@@ -9,10 +10,11 @@ module Primes
 ) where
 
 import Data.Array
+import qualified Data.Set as Set
 import Data.List (group)
 import Utils (cartProd)
 
-nmax = 1000000
+nmax = 10000000
 sqrtnmax1 = (floor $ sqrt $ fromIntegral nmax) + 1
 
 guessPrimes = 2 : [3, 5 .. sqrtnmax1]
@@ -45,6 +47,8 @@ isPrime x
         | otherwise = (length $ factorize x guessPrimes) <= 1
 
 primeTable = filter isPrime [2..nmax]
+
+primeSet = Set.fromList primeTable
 
 primeFactors n = zip factors powers
         where factors = map head groups

@@ -4,6 +4,7 @@ module Utils
 , digitsToNumber
 , numberToDigits
 , allDifferentDigits
+, ithPermutation
 )
 where
 
@@ -28,3 +29,20 @@ allDifferentDigits n = nDigits==nDifferentDigits
         where digits = numberToDigits n
               nDigits = length digits
               nDifferentDigits = length $ Set.fromList $ numberToDigits n
+
+ithPermutation :: Integer -> [a] -> [a]
+ithPermutation rank alphabet
+--        | trace (show index ++ " " ++ show factn1 ++ " ") False = undefined
+        | rank > (fromIntegral n)*factn1 = error "rank must be <= (length alphabet)!"
+        | n==1 = alphabet
+        | otherwise = firstChar : ithPermutation (rank `mod` factn1) remainingAlphabet
+        where n = length alphabet
+              factn1 = factorial $ fromIntegral (n-1)
+              index = fromIntegral $ rank `div` factn1
+              (firstChar, remainingAlphabet) = splitListAt alphabet index
+
+splitListAt :: [a] -> Int -> (a, [a])
+splitListAt s i = (char, rest)
+        where char = s !! i
+              rest = (take i s) ++ (drop (i+1) s)
+
