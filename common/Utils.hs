@@ -3,8 +3,11 @@ module Utils
 , factorial
 , digitsToNumber
 , numberToDigits
+, allDifferentDigits
 )
 where
+
+import qualified Data.Set as Set
 
 cartProd l1 l2 = [ x1 * x2 | x1 <- l1, x2 <- l2 ]
 
@@ -20,3 +23,8 @@ numberToDigits = reverse . numberToDigitsBackwards
                 | n<10 = [n]
                 | otherwise = d : numberToDigitsBackwards (n `div` 10)
                 where d = n `mod` 10
+
+allDifferentDigits n = nDigits==nDifferentDigits
+        where digits = numberToDigits n
+              nDigits = length digits
+              nDifferentDigits = length $ Set.fromList $ numberToDigits n
