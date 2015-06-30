@@ -5,10 +5,15 @@ module Utils
 , numberToDigits
 , allDifferentDigits
 , ithPermutation
+, generatePermutations
+, ithSampleWithoutReplacement
+, generateSamplesWithoutReplacement
+, generateNumbers
 )
 where
 
 import qualified Data.Set as Set
+import Debug.Trace
 
 cartProd l1 l2 = [ x1 * x2 | x1 <- l1, x2 <- l2 ]
 
@@ -39,10 +44,35 @@ ithPermutation rank alphabet
         where n = length alphabet
               factn1 = factorial $ fromIntegral (n-1)
               index = fromIntegral $ rank `div` factn1
-              (firstChar, remainingAlphabet) = splitListAt alphabet index
+              (firstChar, remainingAlphabet) = extractListElementAt alphabet index
 
-splitListAt :: [a] -> Int -> (a, [a])
-splitListAt s i = (char, rest)
+extractListElementAt :: [a] -> Int -> (a, [a])
+extractListElementAt s i = (char, rest)
         where char = s !! i
               rest = (take i s) ++ (drop (i+1) s)
 
+generateNumbers digits = map digitsToNumber $ generatePermutations digits
+
+generatePermutations list = map (\n -> ithPermutation n list) [0..factn1]
+        where factn1 = (factorial $ fromIntegral $ length list) - 1
+
+ithSampleWithoutReplacement :: Integer -> Integer -> [a] -> [a]
+ithSampleWithoutReplacement rank k alphabet
+--        | trace ("+++" ++ show rank ++ " " ++ show nSamples ++ " " ++ show nSamples1 ++ "+++") False = undefined
+        | rank>=nSamples = error "rank must be <= n! / (n-k)!"
+        | k>n = error "sample size must be <= (length alphabet)!"
+        | k==0 = []
+        | otherwise = firstChar : ithSampleWithoutReplacement (rank `mod` nSamples1) (k-1) remainingAlphabet
+        where n = fromIntegral $ length alphabet
+              nSamples = nSamplesWithoutReplacement n k
+              nSamples1 = nSamplesWithoutReplacement (n-1) (k-1)
+              index = fromIntegral $ rank `div` nSamples1
+              (firstChar, remainingAlphabet) = extractListElementAt alphabet index
+
+generateSamplesWithoutReplacement :: Integer -> [a] -> [[a]]
+generateSamplesWithoutReplacement k alphabet = map (\rank -> ithSampleWithoutReplacement rank k alphabet) [0..nSamples1]
+        where nSamples1 = (nSamplesWithoutReplacement n k) - 1
+              n = fromIntegral $ length alphabet
+
+nSamplesWithoutReplacement :: Integer -> Integer -> Integer
+nSamplesWithoutReplacement n k = product [(n-k+1)..n]
