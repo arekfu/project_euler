@@ -6,6 +6,7 @@ module Utils
 , allDifferentDigits
 , ithPermutation
 , generatePermutations
+, generateDigitPermutations
 , ithSampleWithoutReplacement
 , generateSamplesWithoutReplacement
 , generateNumbers
@@ -90,3 +91,6 @@ isPentagonal n = isPerfectSquare discriminant && (1 + (round $ sqrt $ fromIntegr
 isHexagonal :: Integer -> Bool
 isHexagonal n = isPerfectSquare discriminant && (1 + (round $ sqrt $ fromIntegral discriminant)) `mod` 4 == 0
         where discriminant = 1 + 8*n
+
+generateDigitPermutations :: Integer -> [Integer]
+generateDigitPermutations n = map digitsToNumber $ generatePermutations $ numberToDigits n
