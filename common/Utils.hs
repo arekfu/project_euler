@@ -9,6 +9,9 @@ module Utils
 , ithSampleWithoutReplacement
 , generateSamplesWithoutReplacement
 , generateNumbers
+, isPentagonal
+, isHexagonal
+, isPerfectSquare
 )
 where
 
@@ -76,3 +79,14 @@ generateSamplesWithoutReplacement k alphabet = map (\rank -> ithSampleWithoutRep
 
 nSamplesWithoutReplacement :: Integer -> Integer -> Integer
 nSamplesWithoutReplacement n k = product [(n-k+1)..n]
+
+isPerfectSquare :: Integer -> Bool
+isPerfectSquare n = (round $ sqrt $ fromIntegral n)^2 == n
+
+isPentagonal :: Integer -> Bool
+isPentagonal n = isPerfectSquare discriminant && (1 + (round $ sqrt $ fromIntegral discriminant)) `mod` 6 == 0
+        where discriminant = 1 + 24*n
+
+isHexagonal :: Integer -> Bool
+isHexagonal n = isPerfectSquare discriminant && (1 + (round $ sqrt $ fromIntegral discriminant)) `mod` 4 == 0
+        where discriminant = 1 + 8*n
