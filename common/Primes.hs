@@ -1,8 +1,11 @@
 module Primes
 ( primeTable
+, guessPrimes
 , primeSet
 , factorize
+, smallestDivisor
 , isPrime
+, isPrimeWithTableUpToN
 , primeFactors
 , divisors
 , sumDivisors
@@ -36,15 +39,31 @@ factorizeCached n = arr ! n
 factorizeNonCached :: Integer -> [Integer] -> [Integer]
 factorizeNonCached n factors
         | n==1 = []
-        | otherwise = let sqrtn1 = (floor $ sqrt $ fromIntegral n) + 1
-                          smallestDivisor = filter (\x -> (mod n x) == 0) factors
-                          in case smallestDivisor of
-                                [] -> [n]
-                                (x:xs) -> x : factorizeNonCached (n `div` x) factors
+        | otherwise = let smallest = smallestDivisor n factors
+                          in case smallest of
+                                Nothing -> [n]
+                                Just x -> x : factorizeNonCached (n `div` x) factors
+
+smallestDivisor :: Integer -> [Integer] -> Maybe Integer
+smallestDivisor n factors = case small of
+        [] -> Nothing
+        (x:xs) -> Just x
+        where small = dropWhile (\x -> (mod n x) /= 0) $ takeWhile (<n) factors
 
 isPrime x
         | x<2 = False
-        | otherwise = (length $ factorize x guessPrimes) <= 1
+        | otherwise = case small of
+           Nothing -> True
+           Just _ -> False
+           where small = smallestDivisor x guessPrimes
+
+isPrimeWithTableUpToN n x
+        | x<2 = False
+        | otherwise = case small of
+           Nothing -> True
+           Just _ -> False
+           where small = smallestDivisor x tableUpToN
+                 tableUpToN = takeWhile (<=n) primeTable
 
 primeTable = filter isPrime [2..nmax]
 
