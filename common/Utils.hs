@@ -3,6 +3,7 @@ module Utils
 , factorial
 , digitsToNumber
 , numberToDigits
+, numberOfDigits
 , allDifferentDigits
 , ithPermutation
 , generatePermutations
@@ -33,6 +34,9 @@ numberToDigits = reverse . numberToDigitsBackwards
                 | n<10 = [n]
                 | otherwise = d : numberToDigitsBackwards (n `div` 10)
                 where d = n `mod` 10
+
+numberOfDigits :: (Integral a) => a -> a
+numberOfDigits n = fromIntegral $ length $ numberToDigits n
 
 allDifferentDigits n = nDigits==nDifferentDigits
         where digits = numberToDigits n
