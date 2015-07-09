@@ -1,5 +1,7 @@
 module Primes
 ( primeTable
+, makePrimeTable
+, makePrimeArray
 , guessPrimes
 , primeSet
 , factorize
@@ -17,7 +19,7 @@ import qualified Data.Set as Set
 import Data.List (group)
 import Utils (cartProd)
 
-nmax = 10000000
+nmax = 1000000000
 sqrtnmax1 = (floor $ sqrt $ fromIntegral nmax) + 1
 
 guessPrimes = 2 : [3, 5 .. sqrtnmax1]
@@ -59,13 +61,18 @@ isPrime x
 
 isPrimeWithTableUpToN n x
         | x<2 = False
+        | x>=n = error "prime table size exceeded"
         | otherwise = case small of
            Nothing -> True
            Just _ -> False
            where small = smallestDivisor x tableUpToN
                  tableUpToN = takeWhile (<=n) primeTable
 
-primeTable = filter isPrime [2..nmax]
+primeTable = makePrimeTable nmax
+
+makePrimeTable n = filter isPrime [2..n]
+
+makePrimeArray n = listArray (2,n) $ [ isPrime i | i <- [2..n] ]
 
 primeSet = Set.fromList primeTable
 

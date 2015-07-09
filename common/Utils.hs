@@ -14,6 +14,7 @@ module Utils
 , isPentagonal
 , isHexagonal
 , isPerfectSquare
+, concatNumbers
 )
 where
 
@@ -98,3 +99,8 @@ isHexagonal n = isPerfectSquare discriminant && (1 + (round $ sqrt $ fromIntegra
 
 generateDigitPermutations :: Integer -> [Integer]
 generateDigitPermutations n = map digitsToNumber $ generatePermutations $ numberToDigits n
+
+concatNumbers :: [Integer] -> Integer
+concatNumbers [] = 0
+concatNumbers (n:ns) = n + factor*(concatNumbers ns)
+        where factor = head $ dropWhile (<=n) [ 10^k | k <- [0..]]
