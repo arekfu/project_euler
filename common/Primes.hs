@@ -12,12 +12,15 @@ module Primes
 , divisors
 , sumDivisors
 , isAbundant
+, primes
+, primesMask
 ) where
 
 import Data.Array
 import qualified Data.Set as Set
 import Data.List (group)
 import Utils (cartProd)
+import qualified Data.List.Ordered as Ordered
 
 nmax = 1000000000
 sqrtnmax1 = (floor $ sqrt $ fromIntegral nmax) + 1
@@ -57,7 +60,7 @@ isPrime x
         | otherwise = case small of
            Nothing -> True
            Just _ -> False
-           where small = smallestDivisor x guessPrimes
+           where small = smallestDivisor x $ takeWhile (<(ceiling $ sqrt $ fromIntegral x)) primes
 
 isPrimeWithTableUpToN n x
         | x<2 = False
@@ -72,7 +75,28 @@ primeTable = makePrimeTable nmax
 
 makePrimeTable n = filter isPrime [2..n]
 
-makePrimeArray n = listArray (2,n) $ [ isPrime i | i <- [2..n] ]
+makePrimeArray :: Integer -> Array Integer Bool
+makePrimeArray n = listArray (2,n) someBools
+        where diffs = zipWith (-) (tail primes) primes
+              ints = diffsToInts diffs
+              someBools = take (fromIntegral n) $ (True : map (==1) ints)
+
+diffsToInts [] = []
+diffsToInts (x:xs) | x==0 = diffsToInts xs
+                   | otherwise = x : diffsToInts ((x-1):xs)
+
+--makePrimeArray n = listArray (2,n) $ [ primes `Ordered.has` p | p <- [2..n] ]
+
+primes :: [Integer]
+primes = 2 : oddprimes
+  where 
+    oddprimes = sieve [3,5..] 9 oddprimes
+    sieve (x:xs) q ps@ ~(p:t)
+      | x < q     = x : sieve xs q ps
+      | otherwise =     sieve (xs `Ordered.minus` [q, q+2*p..]) (head t^2) t
+
+primesMask = primesMask' primes 0
+        where primesMask' (p:ps) last = (replicate (fromIntegral $ p-last-1) False) ++ (True : primesMask' ps p)
 
 primeSet = Set.fromList primeTable
 

@@ -1,48 +1,93 @@
 import Data.List
-import Data.Array (listArray, (!))
+import qualified Data.Map as Map
+import qualified Data.List.Ordered as Ordered
+import qualified Data.Array as Array
 import Primes
 import Utils
+import Debug.Trace
 
-maxTest = 15000
+maxTest = 1000
 
-testPrimeTable = makePrimeTable maxTest
+testPrimeTable = takeWhile (<maxTest) primes
 
 nT = (length testPrimeTable) - 1
 
-testPrimeArray = listArray (0,nT) testPrimeTable
+data PrimalityTest = PrimalityTest { table :: Array.Array Integer Bool, test :: Integer -> Bool }
 
-arraySize = 100000000
-primeArray = makePrimeArray arraySize
+primalityTest = PrimalityTest arr (\n -> if (fromIntegral n)<=arrayMax then arr Array.! (fromIntegral n) else isPrime n)
+        where arr = makePrimeArray arrayMax
+              arrayMax = concatNumbers maxTest maxTest
 
-primeTest n = if n<arraySize then primeArray ! n else isPrime n
+primeTest n = test primalityTest $ n
 
-data PrimeTuple a b = PrimeTuple { list :: [a], index :: b } deriving (Show, Eq, Ord)
+data PrimeTuple = PrimeTuple { list :: [Integer], toBeConsidered :: [Integer] } deriving (Show, Eq, Ord)
 
-emptyTuple = PrimeTuple [] (-1)
+--makePrimeTuple n = PrimeTuple [n] $ PrimeTuple (allowed [n])
 
-appendToPrimeTuple tuple = [ PrimeTuple newList i  | let j = (index tuple) + 1,
-                i <- [j..nT],
-                let p = testPrimeArray ! i,
-                let oldList = list tuple,
-                let newList = p:oldList,
-                let cs = concatMap (\n -> [concatNumbers [p,n], concatNumbers [n,p]]) oldList,
-                all primeTest cs
-                ]
+emptyTuple = PrimeTuple [] $ tail testPrimeTable
 
-primeTuples = appendToPrimeTuple emptyTuple
+--findNplet :: Int -> PrimeTuple -> Maybe [PrimeTuple]
+--findNplet nmax tuple
+--        | n >= nmax = Just [tuple]
+--        | nleft <= 0 = Nothing
+--        | otherwise = findQuintuplet nmax tuples
+--        where n = length $ list tuple
+--              nleft = length $ toBeConsidered tuple
+--              tuples = concatMap 
 
-pairs = sort $ concatMap appendToPrimeTuple primeTuples
+makeChildren :: PrimeTuple -> [PrimeTuple]
+makeChildren (PrimeTuple _ []) = []
+makeChildren (PrimeTuple l (x:xs)) = (newTuple : (makeChildren newTuple)) ++ (makeChildren (PrimeTuple l xs))
+        where newL = x:l
+              newTuple = PrimeTuple newL (restOf x xs)
 
-triplets = sort $ concatMap appendToPrimeTuple pairs
+restOf :: Integer -> [Integer] -> [Integer]
+restOf x xs = Ordered.isect xs $ primeMap Map.! x
 
-quadruplets = sort $ concatMap appendToPrimeTuple triplets
-
-quintuplets = sort $ concatMap appendToPrimeTuple quadruplets
+answer = filter (\t -> (length $ list t) == 5) $ makeChildren emptyTuple
 
 main = do
-        putStrLn $ "number of pairs: " ++ (show $ length pairs)
-        putStrLn $ "number of triplets: " ++ (show $ length triplets)
-        putStrLn $ "number of quadruplets: " ++ (show $ length quadruplets)
-        putStrLn $ "number of quintuplets: " ++ (show $ length quintuplets)
-        print $ take 10 quintuplets
-        print $ map sum $ map list quintuplets
+        let ans = answer
+        print answer
+        print $ head $ map (sum . list) ans
+
+--appendToPrimeTuple tuple
+--        | trace ("\n*** appendToPrimeTuple " ++ show tuple) False = undefined
+--        | null $ toBeConsidered tuple = []
+--        | otherwise = [ PrimeTuple newList remaining |
+--                p <- toBeConsidered tuple,
+--                let oldList = list tuple,
+--                let newList = p:oldList,
+--                let remaining = allowed newList
+--                ]
+--
+isectMany :: (Ord a) => [[a]] -> [a]
+isectMany [x] = x
+isectMany (l:ls) = Ordered.isect l $ isectMany ls
+
+allowed aList = isectMany $ map (primeMap Map.!) aList
+--
+--primeTuples = tail $ appendToPrimeTuple emptyTuple
+--
+primeMap = Map.fromList [ (p, qs) | p <- testPrimeTable,
+                        let qs = [ q | q <- testPrimeTable,
+                                   primeTest $ concatNumbers p q,
+                                   primeTest $ concatNumbers q p
+                                 ]
+                        ]
+--
+--pairs = concatMap appendToPrimeTuple primeTuples
+--
+--triplets = concatMap appendToPrimeTuple pairs
+--
+--quadruplets = sort $ concatMap appendToPrimeTuple triplets
+--
+--quintuplets = sort $ concatMap appendToPrimeTuple quadruplets
+--
+--main = do
+--        putStrLn $ "number of pairs: " ++ (show $ length pairs)
+--        putStrLn $ "number of triplets: " ++ (show $ length triplets)
+--        putStrLn $ "number of quadruplets: " ++ (show $ length quadruplets)
+--        putStrLn $ "number of quintuplets: " ++ (show $ length quintuplets)
+--        print $ take 10 quintuplets
+--        print $ map sum $ map list quintuplets
