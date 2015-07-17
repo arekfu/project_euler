@@ -19,6 +19,8 @@ module Utils
 , solve2ndDegree
 , isOdd
 , isEven
+, isKthPower
+, digitalSum
 )
 where
 
@@ -121,3 +123,12 @@ solve2ndDegree (c,b,a) = ((-d)-sqrtDiscrOver2a, (-d)+sqrtDiscrOver2a)
 
 isOdd n = n `mod` 2 /= 0
 isEven n = n `mod` 2 == 0
+
+isKthPower :: (Integral a, Integral b) => a -> b -> Bool
+isKthPower k n = (round kthRoot)^k == n
+        where rk = fromIntegral k
+              rn = fromIntegral n
+              kthRoot = (rn**((1.0::Double)/rk)) :: Double
+
+digitalSum n | n<10 = n
+             | otherwise = digitalSum $ sum $ numberToDigits n
