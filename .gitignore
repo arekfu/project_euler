@@ -62,3 +62,6 @@ target/
 
 # vim swap files
 .*.swp
+
+# profiling files
+*.prof

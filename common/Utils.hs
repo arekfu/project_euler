@@ -16,6 +16,9 @@ module Utils
 , isPerfectSquare
 , concatNumbers
 , concatListOfNumbers
+, solve2ndDegree
+, isOdd
+, isEven
 )
 where
 
@@ -109,3 +112,12 @@ concatListOfNumbers (n:ns) = n + factor*(concatListOfNumbers ns)
 concatNumbers :: Integer -> Integer -> Integer
 concatNumbers m n = n + factor*m
         where factor = head $ dropWhile (<=n) [ 10^k | k <- [0..]]
+
+solve2ndDegree :: (Double, Double, Double) -> (Double, Double)
+solve2ndDegree (c,b,a) = ((-d)-sqrtDiscrOver2a, (-d)+sqrtDiscrOver2a)
+        where d = b / (2.0 * a)
+              discr = b**2 - 4.0 * a * c
+              sqrtDiscrOver2a = (sqrt discr) / (2.0 * a)
+
+isOdd n = n `mod` 2 /= 0
+isEven n = n `mod` 2 == 0
