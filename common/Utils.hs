@@ -21,10 +21,12 @@ module Utils
 , isEven
 , isKthPower
 , digitalSum
+, firstRepeatingIndex
 )
 where
 
 import qualified Data.Set as Set
+import qualified Data.Map as Map
 import Debug.Trace
 
 cartProd l1 l2 = [ x1 * x2 | x1 <- l1, x2 <- l2 ]
@@ -132,3 +134,10 @@ isKthPower k n = (round kthRoot)^k == n
 
 digitalSum n | n<10 = n
              | otherwise = digitalSum $ sum $ numberToDigits n
+
+firstRepeatingIndex :: (Ord a) => [a] -> (Int, Int)
+firstRepeatingIndex list = firstRepeatingIndex' list 0 Map.empty
+        where firstRepeatingIndex' [] index _ = (index, index)
+              firstRepeatingIndex' (x:xs) index m | x `Map.member` m = (m Map.! x, index)
+                                                  | otherwise = firstRepeatingIndex' xs (index+1) (Map.insert x index m)
+
