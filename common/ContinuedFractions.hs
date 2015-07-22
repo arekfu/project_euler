@@ -3,6 +3,13 @@ module ContinuedFractions
 , periodicContinuedFractionExpansionSqrt
 , fixedPart
 , periodicPart
+, foldToRational
+--, scanToRational
+, toCFExpansion
+, fromCFExpansion
+, nthApproximant
+, approximant
+, approximants
 ) where
 
 import Data.Ratio
@@ -20,6 +27,12 @@ nextStep (CFStep t a num den) = let sqrtA = sqrt (fromIntegral a)
                                     in CFStep t' a' num' den'
 
 newtype CFExpansion = CFExpansion [Integer] deriving (Show, Eq)
+
+toCFExpansion :: [Integer] -> CFExpansion
+toCFExpansion = CFExpansion
+
+fromCFExpansion :: CFExpansion -> [Integer]
+fromCFExpansion (CFExpansion l) = l
 
 continuedFractionExpansionSqrt :: Integer -> CFExpansion
 continuedFractionExpansionSqrt n = CFExpansion $ map term $ cfSteps n
@@ -41,3 +54,28 @@ periodicContinuedFractionExpansionSqrt n = PeriodicCFExpansion fixed period
               (periodStartIndex, secondPeriodIndex) = firstRepeatingIndex steps
               periodLength = secondPeriodIndex - periodStartIndex
 
+foldToRational :: CFExpansion -> Rational
+foldToRational (CFExpansion []) = 0%1
+foldToRational (CFExpansion [x]) = x % 1
+foldToRational (CFExpansion (x:xs)) = x % 1 + recip (foldToRational $ CFExpansion xs)
+
+--scanToRational :: CFExpansion -> [Rational]
+--scanToRational e = scanToRational' e []
+--        where scanToRational' (CFExpansion []) l = (0%1) : l
+--              scanToRational' (CFExpansion [x]) l = (x % 1) : l
+--              scanToRational' (CFExpansion (x:xs)) = (x % 1 + recip (scanToRational' (CFExpansion xs) l)) : l
+
+nextApproximant :: Integer -> Rational -> Rational
+nextApproximant term approx = recip $ (term%1) + approx
+
+nthApproximant :: Int -> CFExpansion -> Rational
+nthApproximant n e = (foldr nextApproximant (0%1) xs) + (x%1)
+        where (x:xs) = take n $ fromCFExpansion e
+
+approximant :: CFExpansion -> Rational
+approximant e = (foldr nextApproximant (0%1) xs) + (x%1)
+        where (x:xs) = fromCFExpansion e
+
+approximants :: CFExpansion -> [Rational]
+approximants e = map (+ (x%1)) $ scanr nextApproximant (0%1) xs
+        where (x:xs) = fromCFExpansion e
