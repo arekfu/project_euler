@@ -79,3 +79,4 @@ approximant e = (foldr nextApproximant (0%1) xs) + (x%1)
 approximants :: CFExpansion -> [Rational]
 approximants e = map (+ (x%1)) $ scanr nextApproximant (0%1) xs
         where (x:xs) = fromCFExpansion e
+
