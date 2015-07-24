@@ -27,6 +27,7 @@ where
 
 import qualified Data.Set as Set
 import qualified Data.Map as Map
+import Data.Char (ord)
 import Debug.Trace
 
 cartProd l1 l2 = [ x1 * x2 | x1 <- l1, x2 <- l2 ]
@@ -37,14 +38,18 @@ factorial n = product [1..n]
 digitsToNumber :: (Num a) => [a] -> a
 digitsToNumber digs = foldl (\x -> \y -> x*10+y) 0 digs
 
-numberToDigits :: (Integral a) => a -> [a]
-numberToDigits = reverse . numberToDigitsBackwards
+numberToDigits' :: (Integral a) => a -> [a]
+numberToDigits' = reverse . numberToDigitsBackwards
         where numberToDigitsBackwards n
                 | n<10 = [n]
                 | otherwise = d : numberToDigitsBackwards (n `div` 10)
                 where d = n `mod` 10
 
-numberOfDigits :: (Integral a) => a -> a
+numberToDigits :: (Integral a, Show a) => a -> [a]
+numberToDigits n = map (\c -> fromIntegral ((ord c) - 48)) $ show n
+-- ord '0' = 48
+
+numberOfDigits :: (Integral a, Show a) => a -> a
 numberOfDigits n = fromIntegral $ length $ numberToDigits n
 
 allDifferentDigits n = nDigits==nDifferentDigits
