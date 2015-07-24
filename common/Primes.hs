@@ -14,6 +14,9 @@ module Primes
 , isAbundant
 , primes
 , primesMask
+, makeFactorizationArray
+, makeFactorizer
+, runFactorization
 ) where
 
 import Data.Array
@@ -21,25 +24,38 @@ import qualified Data.Set as Set
 import Data.List (group)
 import Utils (cartProd)
 import qualified Data.List.Ordered as Ordered
+--import Debug.Trace
 
 nmax = 1000000000
 sqrtnmax1 = (floor $ sqrt $ fromIntegral nmax) + 1
 
 guessPrimes = 2 : [3, 5 .. sqrtnmax1]
 
+newtype Factorization = Factorization { getFactors :: [Integer] }
+
+instance Show Factorization where
+    show (Factorization f) = show f
+
 factorize = factorizeNonCached
 
-factorizeCached :: Integer -> [Integer]
-factorizeCached n = arr ! n
-        where arr = listArray (2,n) [ factorizeHelper i | i <- [2..n] ]
-              factorizeHelper i
-                      | i<=2 = [i]
-                      | otherwise = let sqrti1 = (floor $ sqrt $ fromIntegral i) + 1
-                                        factors = 2 : [3, 5 .. sqrti1]
-                                        smallestDivisor = filter (\x -> (mod i x) == 0) factors
-                                        in case smallestDivisor of
-                                              [] -> [i]
-                                              (x:xs) -> x : (arr ! (i `div` x))
+makeFactorizationArray :: Integer -> Array Integer Factorization
+makeFactorizationArray nmax = arr
+    where arr = listArray (2,nmax) [ Factorization (factorizeHelper i) | i <- [2..nmax] ]
+          factorizeHelper i
+--              | trace ("calling on " ++ show i) False = undefined
+              | i<=2 = [i]
+              | otherwise = let sqrtI = floor $ sqrt $ fromIntegral i
+                                factors = takeWhile (<sqrtI) primes
+                                smallestDivisor = filter (\x -> (mod i x) == 0) factors
+                            in case smallestDivisor of
+                                [] -> [i]
+                                (x:xs) -> x : (getFactors $ arr ! (i `div` x))
+
+data Factorizer = Factorizer { runFactorization :: (Integer -> Factorization) }
+
+makeFactorizer :: Integer -> Factorizer
+makeFactorizer nmax = Factorizer (\n -> arr ! n)
+    where arr = makeFactorizationArray nmax
 
 factorizeNonCached :: Integer -> [Integer] -> [Integer]
 factorizeNonCached n factors
@@ -52,7 +68,7 @@ factorizeNonCached n factors
 smallestDivisor :: Integer -> [Integer] -> Maybe Integer
 smallestDivisor n factors = case small of
         [] -> Nothing
-        (x:xs) -> Just x
+        (x:_) -> Just x
         where small = dropWhile (\x -> (mod n x) /= 0) $ takeWhile (<n) factors
 
 isPrime x
@@ -69,7 +85,7 @@ isPrimeWithTableUpToN n x
            Nothing -> True
            Just _ -> False
            where small = smallestDivisor x tableUpToN
-                 tableUpToN = takeWhile (<=n) primeTable
+                 tableUpToN = takeWhile (<=n) primes
 
 primeTable = makePrimeTable nmax
 
@@ -103,7 +119,7 @@ primeSet = Set.fromList primeTable
 primeFactors n = zip factors powers
         where factors = map head groups
               powers = map length groups
-              groups = (group $ factorize n primeTable)
+              groups = (group $ factorize n primes)
 
 divisors n = foldl cartProd [1] divisorList
         where divisorList = [ [ i^j | j <- [0..k] ] | (i, k) <- pFactors ]
