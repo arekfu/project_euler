@@ -6,7 +6,6 @@ module Utils
 , numberOfDigits
 , allDifferentDigits
 , ithPermutation
-, generatePermutations
 , generateDigitPermutations
 , ithSampleWithoutReplacement
 , generateSamplesWithoutReplacement
@@ -27,6 +26,7 @@ where
 
 import qualified Data.Set as Set
 import qualified Data.Map as Map
+import Data.List (permutations)
 import Data.Char (ord)
 import Debug.Trace
 
@@ -73,10 +73,7 @@ extractListElementAt s i = (char, rest)
         where char = s !! i
               rest = (take i s) ++ (drop (i+1) s)
 
-generateNumbers digits = map digitsToNumber $ generatePermutations digits
-
-generatePermutations list = map (\n -> ithPermutation n list) [0..factn1]
-        where factn1 = (factorial $ fromIntegral $ length list) - 1
+generateNumbers digits = map digitsToNumber $ permutations digits
 
 ithSampleWithoutReplacement :: Integer -> Integer -> [a] -> [a]
 ithSampleWithoutReplacement rank k alphabet
@@ -111,7 +108,7 @@ isHexagonal n = isPerfectSquare discriminant && (1 + (round $ sqrt $ fromIntegra
         where discriminant = 1 + 8*n
 
 generateDigitPermutations :: Integer -> [Integer]
-generateDigitPermutations n = map digitsToNumber $ generatePermutations $ numberToDigits n
+generateDigitPermutations n = map digitsToNumber $ permutations $ numberToDigits n
 
 concatListOfNumbers :: [Integer] -> Integer
 concatListOfNumbers [] = 0

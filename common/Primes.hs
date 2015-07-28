@@ -17,13 +17,18 @@ module Primes
 , makeFactorizationArray
 , makeFactorizer
 , runFactorization
+, coprime
+, getFactors
+, foldForPhi
 ) where
 
 import Data.Array
 import qualified Data.Set as Set
-import Data.List (group)
+import qualified Data.Map as Map
+import Data.List (group, groupBy)
 import Utils (cartProd)
 import qualified Data.List.Ordered as Ordered
+import Data.Function (on)
 --import Debug.Trace
 
 nmax = 1000000000
@@ -31,10 +36,8 @@ sqrtnmax1 = (floor $ sqrt $ fromIntegral nmax) + 1
 
 guessPrimes = 2 : [3, 5 .. sqrtnmax1]
 
-newtype Factorization = Factorization { getFactors :: [Integer] }
-
-instance Show Factorization where
-    show (Factorization f) = show f
+newtype Factorization = Factorization { getFactors :: Map.Map Integer Integer }
+    deriving (Show, Eq)
 
 factorize = factorizeNonCached
 
@@ -43,13 +46,19 @@ makeFactorizationArray nmax = arr
     where arr = listArray (2,nmax) [ Factorization (factorizeHelper i) | i <- [2..nmax] ]
           factorizeHelper i
 --              | trace ("calling on " ++ show i) False = undefined
-              | i<=2 = [i]
+              | i<=2 = Map.singleton i 1
               | otherwise = let sqrtI = floor $ sqrt $ fromIntegral i
-                                factors = takeWhile (<sqrtI) primes
-                                smallestDivisor = filter (\x -> (mod i x) == 0) factors
+                                factors = takeWhile (<=sqrtI) primes
+                                smallestDivisor = filter (\x -> i `mod` x == 0) factors
                             in case smallestDivisor of
-                                [] -> [i]
-                                (x:xs) -> x : (getFactors $ arr ! (i `div` x))
+                                [] -> Map.singleton i 1
+                                (x:_) -> Map.insertWith (+) x 1 (getFactors $ arr ! (i `div` x))
+
+($*$) :: Factorization -> Factorization -> Factorization
+infixl 7 $*$
+f1 $*$ f2 = Factorization $ Map.unionWith (+) fac1 fac2
+    where fac1 = getFactors f1
+          fac2 = getFactors f2
 
 data Factorizer = Factorizer { runFactorization :: (Integer -> Factorization) }
 
@@ -129,3 +138,13 @@ sumDivisors n = (sum $ divisors n) - n
 
 isAbundant n = (sumDivisors n) > n
 
+coprime :: Factorizer -> Integer -> Integer -> Bool
+coprime f m n = not $ Map.null $ fm `Map.intersection` fn
+    where fm = getFactors $ runFactorization f $ m
+          fn = getFactors $ runFactorization f $ n
+
+foldForPhi :: Factorization -> Integer
+foldForPhi f = foldForPhi' $ getFactors f
+    where foldForPhi' m = fst $ Map.mapAccumWithKey accumulator 1 m
+          accumulator acc prime power = (acc * phiFactor, phiFactor)
+                where phiFactor = prime^power - prime^(power-1)
