@@ -4,11 +4,9 @@ module Primes
 , makePrimeArray
 , guessPrimes
 , primeSet
-, factorize
 , smallestDivisor
 , isPrime
 , isPrimeWithTableUpToN
-, primeFactors
 , divisors
 , sumDivisors
 , isAbundant
@@ -19,13 +17,13 @@ module Primes
 , runFactorization
 , coprime
 , getFactors
-, foldForPhi
+, phiFold
 ) where
 
 import Data.Array
 import qualified Data.Set as Set
 import qualified Data.Map as Map
-import Data.List (group, groupBy)
+import Data.List (group, groupBy, foldl')
 import Utils (cartProd)
 import qualified Data.List.Ordered as Ordered
 import Data.Function (on)
@@ -39,20 +37,15 @@ guessPrimes = 2 : [3, 5 .. sqrtnmax1]
 newtype Factorization = Factorization { getFactors :: Map.Map Integer Integer }
     deriving (Show, Eq)
 
-factorize = factorizeNonCached
-
 makeFactorizationArray :: Integer -> Array Integer Factorization
 makeFactorizationArray nmax = arr
     where arr = listArray (2,nmax) [ Factorization (factorizeHelper i) | i <- [2..nmax] ]
           factorizeHelper i
 --              | trace ("calling on " ++ show i) False = undefined
               | i<=2 = Map.singleton i 1
-              | otherwise = let sqrtI = floor $ sqrt $ fromIntegral i
-                                factors = takeWhile (<=sqrtI) primes
-                                smallestDivisor = filter (\x -> i `mod` x == 0) factors
-                            in case smallestDivisor of
-                                [] -> Map.singleton i 1
-                                (x:_) -> Map.insertWith (+) x 1 (getFactors $ arr ! (i `div` x))
+              | otherwise = case (smallestDivisor i primes) of
+                                Nothing -> Map.singleton i 1
+                                Just x -> Map.insertWith (+) x 1 (getFactors $ arr ! (i `div` x))
 
 ($*$) :: Factorization -> Factorization -> Factorization
 infixl 7 $*$
@@ -66,19 +59,12 @@ makeFactorizer :: Integer -> Factorizer
 makeFactorizer nmax = Factorizer (\n -> arr ! n)
     where arr = makeFactorizationArray nmax
 
-factorizeNonCached :: Integer -> [Integer] -> [Integer]
-factorizeNonCached n factors
-        | n==1 = []
-        | otherwise = let smallest = smallestDivisor n factors
-                          in case smallest of
-                                Nothing -> [n]
-                                Just x -> x : factorizeNonCached (n `div` x) factors
-
 smallestDivisor :: Integer -> [Integer] -> Maybe Integer
 smallestDivisor n factors = case small of
         [] -> Nothing
         (x:_) -> Just x
-        where small = dropWhile (\x -> (mod n x) /= 0) $ takeWhile (<n) factors
+        where small = dropWhile (\x -> (mod n x) /= 0) $ takeWhile (<=sqrtN) factors
+              sqrtN = floor $ sqrt $ fromIntegral n
 
 isPrime x
         | x<2 = False
@@ -125,26 +111,21 @@ primesMask = primesMask' primes 0
 
 primeSet = Set.fromList primeTable
 
-primeFactors n = zip factors powers
-        where factors = map head groups
-              powers = map length groups
-              groups = (group $ factorize n primes)
-
-divisors n = foldl cartProd [1] divisorList
+divisors factorizer n = foldl cartProd [1] divisorList
         where divisorList = [ [ i^j | j <- [0..k] ] | (i, k) <- pFactors ]
-              pFactors = primeFactors n
+              pFactors = Map.assocs $ getFactors $ runFactorization factorizer n
 
-sumDivisors n = (sum $ divisors n) - n
+sumDivisors factorizer n = (sum $ divisors factorizer n) - n
 
-isAbundant n = (sumDivisors n) > n
+isAbundant factorizer n = (sumDivisors factorizer n) > n
 
 coprime :: Factorizer -> Integer -> Integer -> Bool
 coprime f m n = not $ Map.null $ fm `Map.intersection` fn
     where fm = getFactors $ runFactorization f $ m
           fn = getFactors $ runFactorization f $ n
 
-foldForPhi :: Factorization -> Integer
-foldForPhi f = foldForPhi' $ getFactors f
-    where foldForPhi' m = fst $ Map.mapAccumWithKey accumulator 1 m
-          accumulator acc prime power = (acc * phiFactor, phiFactor)
-                where phiFactor = prime^power - prime^(power-1)
+phiFold :: Factorization -> Integer
+phiFold f = phiFold' $ getFactors f
+    where phiFold' m = Map.foldlWithKey' accumulator 1 m
+          accumulator acc prime power = acc * phiFactor
+                where phiFactor = (prime-1) * prime^(power-1)
