@@ -8,7 +8,7 @@ module Utils
 , ithPermutation
 , generateDigitPermutations
 , ithSampleWithoutReplacement
-, generateSamplesWithoutReplacement
+, unorderedSamplesWithoutReplacement
 , generateNumbers
 , isPentagonal
 , isHexagonal
@@ -21,18 +21,20 @@ module Utils
 , isKthPower
 , digitalSum
 , firstRepeatingIndex
+, pairElementsWith
+, samplesWithoutReplacement
 )
 where
 
 import qualified Data.Set as Set
 import qualified Data.Map as Map
-import Data.List (permutations)
+import Data.List (permutations, tails, subsequences)
 import Data.Char (ord)
 import Debug.Trace
 
 cartProd l1 l2 = [ x1 * x2 | x1 <- l1, x2 <- l2 ]
 
-factorial :: Integer -> Integer
+factorial :: (Integral a) => a -> a
 factorial n = product [1..n]
 
 digitsToNumber :: (Num a) => [a] -> a
@@ -57,7 +59,7 @@ allDifferentDigits n = nDigits==nDifferentDigits
               nDigits = length digits
               nDifferentDigits = length $ Set.fromList $ numberToDigits n
 
-ithPermutation :: Integer -> [a] -> [a]
+ithPermutation :: (Integral a) => a -> [b] -> [b]
 ithPermutation rank alphabet
 --        | trace (show index ++ " " ++ show factn1 ++ " ") False = undefined
         | rank > (fromIntegral n)*factn1 = error "rank must be <= (length alphabet)!"
@@ -68,14 +70,15 @@ ithPermutation rank alphabet
               index = fromIntegral $ rank `div` factn1
               (firstChar, remainingAlphabet) = extractListElementAt alphabet index
 
-extractListElementAt :: [a] -> Int -> (a, [a])
+extractListElementAt :: (Integral b) => [a] -> b -> (a, [a])
 extractListElementAt s i = (char, rest)
-        where char = s !! i
-              rest = (take i s) ++ (drop (i+1) s)
+        where char = s !! iI
+              rest = (take iI s) ++ (drop (iI+1) s)
+              iI = fromIntegral i
 
 generateNumbers digits = map digitsToNumber $ permutations digits
 
-ithSampleWithoutReplacement :: Integer -> Integer -> [a] -> [a]
+ithSampleWithoutReplacement :: (Integral a) => a -> a -> [b] -> [b]
 ithSampleWithoutReplacement rank k alphabet
 --        | trace ("+++" ++ show rank ++ " " ++ show nSamples ++ " " ++ show nSamples1 ++ "+++") False = undefined
         | rank>=nSamples = error "rank must be <= n! / (n-k)!"
@@ -88,38 +91,36 @@ ithSampleWithoutReplacement rank k alphabet
               index = fromIntegral $ rank `div` nSamples1
               (firstChar, remainingAlphabet) = extractListElementAt alphabet index
 
-generateSamplesWithoutReplacement :: Integer -> [a] -> [[a]]
-generateSamplesWithoutReplacement k alphabet = map (\rank -> ithSampleWithoutReplacement rank k alphabet) [0..nSamples1]
-        where nSamples1 = (nSamplesWithoutReplacement n k) - 1
-              n = fromIntegral $ length alphabet
+unorderedSamplesWithoutReplacement :: (Integral a) => a -> [b] -> [[b]]
+unorderedSamplesWithoutReplacement k l = concatMap permutations $ samplesWithoutReplacement k l
 
-nSamplesWithoutReplacement :: Integer -> Integer -> Integer
+nSamplesWithoutReplacement :: (Integral a) => a -> a -> a
 nSamplesWithoutReplacement n k = product [(n-k+1)..n]
 
-isPerfectSquare :: Integer -> Bool
+isPerfectSquare :: (Integral a) => a -> Bool
 isPerfectSquare n = (round $ sqrt $ fromIntegral n)^2 == n
 
-isPentagonal :: Integer -> Bool
+isPentagonal :: (Integral a) => a -> Bool
 isPentagonal n = isPerfectSquare discriminant && (1 + (round $ sqrt $ fromIntegral discriminant)) `mod` 6 == 0
         where discriminant = 1 + 24*n
 
-isHexagonal :: Integer -> Bool
+isHexagonal :: (Integral a) => a -> Bool
 isHexagonal n = isPerfectSquare discriminant && (1 + (round $ sqrt $ fromIntegral discriminant)) `mod` 4 == 0
         where discriminant = 1 + 8*n
 
-generateDigitPermutations :: Integer -> [Integer]
-generateDigitPermutations n = map digitsToNumber $ permutations $ numberToDigits n
+generateDigitPermutations :: (Integral a, Show a) => a -> [a]
+generateDigitPermutations n = map digitsToNumber $ permutations $ numberToDigits $ fromIntegral n
 
-concatListOfNumbers :: [Integer] -> Integer
+concatListOfNumbers :: (Integral a) => [a] -> a
 concatListOfNumbers [] = 0
 concatListOfNumbers (n:ns) = n + factor*(concatListOfNumbers ns)
         where factor = head $ dropWhile (<=n) [ 10^k | k <- [0..]]
 
-concatNumbers :: Integer -> Integer -> Integer
+concatNumbers :: (Integral a) => a -> a -> a
 concatNumbers m n = n + factor*m
         where factor = head $ dropWhile (<=n) [ 10^k | k <- [0..]]
 
-solve2ndDegree :: (Double, Double, Double) -> (Double, Double)
+solve2ndDegree :: (Floating a) => (a, a, a) -> (a, a)
 solve2ndDegree (c,b,a) = ((-d)-sqrtDiscrOver2a, (-d)+sqrtDiscrOver2a)
         where d = b / (2.0 * a)
               discr = b**2 - 4.0 * a * c
@@ -137,9 +138,15 @@ isKthPower k n = (round kthRoot)^k == n
 digitalSum n | n<10 = n
              | otherwise = digitalSum $ sum $ numberToDigits n
 
-firstRepeatingIndex :: (Ord a) => [a] -> (Int, Int)
+firstRepeatingIndex :: (Ord a, Integral b) => [a] -> (b, b)
 firstRepeatingIndex list = firstRepeatingIndex' list 0 Map.empty
         where firstRepeatingIndex' [] index _ = (index, index)
               firstRepeatingIndex' (x:xs) index m | x `Map.member` m = (m Map.! x, index)
                                                   | otherwise = firstRepeatingIndex' xs (index+1) (Map.insert x index m)
 
+pairElementsWith :: (a -> a -> b) -> [a] -> [b]
+pairElementsWith f l = concatMap (\l -> zipWith f (repeat $ head l) (tail l)) suffs
+    where suffs = init $ tails l
+
+samplesWithoutReplacement :: (Integral a) => a -> [b] -> [[b]]
+samplesWithoutReplacement n l = filter (\l -> (length l)==(fromIntegral n)) $ subsequences l
