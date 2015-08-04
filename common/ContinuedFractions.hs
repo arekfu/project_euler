@@ -10,6 +10,9 @@ module ContinuedFractions
 , nthApproximant
 , approximant
 , approximants
+, precision
+, ContinuedFractions.truncate
+, expandSqrtEpsilon
 ) where
 
 import Data.Ratio
@@ -80,3 +83,14 @@ approximants :: CFExpansion -> [Rational]
 approximants e = map (+ (x%1)) $ scanr nextApproximant (0%1) xs
         where (x:xs) = fromCFExpansion e
 
+precision :: CFExpansion -> Rational
+precision e = abs ((approximant e) - (approximant e'))
+        where e' = CFExpansion $ init $ fromCFExpansion e
+
+truncate :: CFExpansion -> Int -> CFExpansion
+truncate e n = CFExpansion $ take n $ fromCFExpansion e
+
+expandSqrtEpsilon :: Rational -> Integer -> CFExpansion
+expandSqrtEpsilon epsilon n = head $ dropWhile (\e -> (precision e) >= epsilon) expansions
+    where expansions = map (ContinuedFractions.truncate fullExp) [2..]
+          fullExp = continuedFractionExpansionSqrt n
