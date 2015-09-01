@@ -6,7 +6,7 @@ main = print answer
 
 closestTo f den = let denF = denominator f
                       numF = numerator f
-                  in ((numF * den) - 1 `div` denF) % den
+                  in ((numF * den - 1) `div` denF) % den
 
 closestToUpTo f denMax = map (closestTo f) [2..denMax]
 
