@@ -2,6 +2,8 @@ import Primes
 import Utils
 import Data.Array
 import Data.List
+import Data.Ratio
+import qualified Data.Map as M
 
 nmax = 10000000
 
@@ -33,7 +35,10 @@ infixr 5 *%
 
 factorizer = makeFactorizer nmax
 
-phi = zip [2..nmax] $ map (foldForPhi . (runFactorization factorizer)) [2..nmax]
+foldForPhi n = numerator $ (n%1) * (product $ map (\p -> (p-1)%p) $ M.keys $ getFactors ps)
+    where ps = runFactorization factorizer n
+
+phi = zip [2..nmax] $ map foldForPhi [2..nmax]
 
 permutationPhis = filter isPermutation phi
     where isPermutation (a,b) = null $ (numberToDigits a) \\ (numberToDigits b)
