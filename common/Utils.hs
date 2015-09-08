@@ -23,6 +23,7 @@ module Utils
 , firstRepeatingIndex
 , pairElementsWith
 , samplesWithoutReplacement
+, zipMap
 )
 where
 
@@ -98,7 +99,9 @@ nSamplesWithoutReplacement :: (Integral a) => a -> a -> a
 nSamplesWithoutReplacement n k = product [(n-k+1)..n]
 
 isPerfectSquare :: (Integral a) => a -> Bool
-isPerfectSquare n = (round $ sqrt $ fromIntegral n)^2 == n
+--isPerfectSquare n = (round $ sqrt $ fromIntegral n)^2 == n
+isPerfectSquare n = (head $ dropWhile (\k -> k^2>n) (iterate (next n) n))^2 == n
+    where next n a = (a + (n `div` a)) ` div` 2
 
 isPentagonal :: (Integral a) => a -> Bool
 isPentagonal n = isPerfectSquare discriminant && (1 + (round $ sqrt $ fromIntegral discriminant)) `mod` 6 == 0
@@ -150,3 +153,6 @@ pairElementsWith f l = concatMap (\l -> zipWith f (repeat $ head l) (tail l)) su
 
 samplesWithoutReplacement :: (Integral a) => a -> [b] -> [[b]]
 samplesWithoutReplacement n l = filter (\l -> (length l)==(fromIntegral n)) $ subsequences l
+
+zipMap :: (a -> b) -> [a] -> [(a, b)]
+zipMap f l = zip l $ map f l
