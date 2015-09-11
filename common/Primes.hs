@@ -18,6 +18,7 @@ module Primes
 , coprime
 , getFactors
 , phiFold
+, Factorization()
 ) where
 
 import Data.Array
