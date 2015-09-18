@@ -24,6 +24,7 @@ module Utils
 , pairElementsWith
 , samplesWithoutReplacement
 , zipMap
+, generatePicks
 )
 where
 
@@ -156,3 +157,8 @@ samplesWithoutReplacement n l = filter (\l -> (length l)==(fromIntegral n)) $ su
 
 zipMap :: (a -> b) -> [a] -> [(a, b)]
 zipMap f l = zip l $ map f l
+
+-- pick one element from each list inside the first list in all possible ways
+generatePicks :: [[a]] -> [[a]]
+generatePicks (x:xs) = concatMap (\f -> map f $ generatePicks xs) $ map (:) x
+generatePicks [] = [[]]
