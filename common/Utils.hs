@@ -3,6 +3,7 @@ module Utils
 , factorial
 , digitsToNumber
 , numberToDigits
+, numberToDigitsBackwards
 , numberOfDigits
 , allDifferentDigits
 , ithPermutation
@@ -30,7 +31,7 @@ where
 
 import qualified Data.Set as Set
 import qualified Data.Map as Map
-import Data.List (permutations, tails, subsequences)
+import Data.List (permutations, tails, subsequences, foldl', unfoldr)
 import Data.Char (ord)
 import Debug.Trace
 
@@ -40,18 +41,19 @@ factorial :: (Integral a) => a -> a
 factorial n = product [1..n]
 
 digitsToNumber :: (Num a) => [a] -> a
-digitsToNumber digs = foldl (\x -> \y -> x*10+y) 0 digs
+digitsToNumber digs = foldl' (\x y -> x*10+y) 0 digs
 
-numberToDigits' :: (Integral a) => a -> [a]
-numberToDigits' = reverse . numberToDigitsBackwards
-        where numberToDigitsBackwards n
-                | n<10 = [n]
-                | otherwise = d : numberToDigitsBackwards (n `div` 10)
-                where d = n `mod` 10
+--numberToDigitsBackwards :: (Integral a) => a -> [a]
+--numberToDigitsBackwards n
+--    | n<10 = [n]
+--    | otherwise = d : numberToDigitsBackwards (n `div` 10)
+--    where d = n `mod` 10
 
 numberToDigits :: (Integral a, Show a) => a -> [a]
 numberToDigits n = map (\c -> fromIntegral ((ord c) - 48)) $ show n
 -- ord '0' = 48
+
+numberToDigitsBackwards n = unfoldr (\k -> if k>0 then (Just (k `mod` 10, k `div` 10)) else Nothing) n
 
 numberOfDigits :: (Integral a, Show a) => a -> a
 numberOfDigits n = fromIntegral $ length $ numberToDigits n
