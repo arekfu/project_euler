@@ -116,6 +116,8 @@ divisors factorizer n = foldl cartProd [1] divisorList
         where divisorList = [ [ i^j | j <- [0..k] ] | (i, k) <- pFactors ]
               pFactors = Map.assocs $ getFactors $ runFactorization factorizer n
 
+sumDivisors _ 0 = 0
+sumDivisors _ 1 = 0
 sumDivisors factorizer n = (sum $ divisors factorizer n) - n
 
 isAbundant factorizer n = (sumDivisors factorizer n) > n
