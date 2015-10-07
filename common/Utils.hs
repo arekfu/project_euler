@@ -26,6 +26,7 @@ module Utils
 , samplesWithoutReplacement
 , zipMap
 , generatePicks
+, pairs
 )
 where
 
@@ -164,3 +165,8 @@ zipMap f l = zip l $ map f l
 generatePicks :: [[a]] -> [[a]]
 generatePicks (x:xs) = concatMap (\f -> map f $ generatePicks xs) $ map (:) x
 generatePicks [] = [[]]
+
+pairs :: [a] -> [(a,a)]
+pairs [] = []
+pairs (x:xs) = (map (\y -> (x,y)) xs) ++ pairs xs
+
